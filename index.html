@@ -1337,6 +1337,8 @@ function safeParseJSON(text) {
     return JSON.parse(raw);
   }
 }
+
+function requireKey(){
   if(!STATE.apiKey){document.getElementById('key-modal').style.display='flex';return false}
   return true;
 }
