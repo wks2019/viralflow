@@ -1124,9 +1124,9 @@ async function runNicheAnalysis(){
   document.getElementById('analyze-btn').disabled=true;
   const phrases=['Searching the web...','Reading live sources...','Analysing results...','Synthesising data...','Almost done...'];
   let pi=0;const pInt=setInterval(()=>{pi=(pi+1)%phrases.length;const el=document.getElementById('niche-loader-text');if(el)el.textContent=phrases[pi]},1800);
-  const sys=`You are ViralFlow's AI niche analyst. USE web search to find current real TikTok trend data. Return ONLY valid JSON no markdown:
-{"narrative":"2-3 sentences grounded in real web data about this niche TikTok momentum","viralScore":75,"growthRate":"+18%","saturation":"Medium","saturationPercent":55,"viralTriggers":["T1","T2","T3","T4","T5","T6"],"competitors":[{"handle":"@h1","style":"desc","followers":"1.2M"},{"handle":"@h2","style":"desc","followers":"890K"}],"barHeights":[30,45,55,65,78,88,100]}
-Base everything on real current web data.`;
+  const sys=`You are ViralFlow's AI niche analyst. USE web search to find current real TikTok trend data. You MUST respond with ONLY a valid JSON object. No introduction, no explanation, no markdown. Start with { and end with }. Nothing else outside the JSON. Even if the niche seems unusual, always return the JSON. No apostrophes inside string values - use alternative wording instead.
+{"narrative":"2-3 sentences about this niche TikTok momentum based on web search findings","viralScore":75,"growthRate":"+18%","saturation":"Medium","saturationPercent":55,"viralTriggers":["T1","T2","T3","T4","T5","T6"],"competitors":[{"handle":"@handle1","style":"style description","followers":"1.2M"},{"handle":"@handle2","style":"style description","followers":"890K"}],"barHeights":[30,45,55,65,78,88,100]}
+viralScore 0-100. saturation Low/Medium/High. saturationPercent 0-100. barHeights 7 numbers representing weekly momentum.`;
   const usr=`Search web for current TikTok trends and analyze this niche: "${niche}"`;
   try{
     document.getElementById('niche-results').style.display='flex';
@@ -1193,9 +1193,9 @@ async function runScriptGeneration(){
   const phrases=['Searching for techniques...','Reading creator strategies...','Crafting your hook...','Building the body...','Adding the CTA...'];
   let pi=0;const pInt=setInterval(()=>{pi=(pi+1)%phrases.length;const el=document.getElementById('script-loader-text');if(el)el.textContent=phrases[pi]},1600);
   const nc=STATE.nicheAnalysis?`Niche: ${STATE.currentNiche}. Viral triggers: ${(STATE.nicheAnalysis.viralTriggers||[]).join(', ')}. Growth: ${STATE.nicheAnalysis.growthRate}.`:`Niche: ${STATE.currentNiche}`;
-  const sys=`You are ViralFlow's AI scriptwriter. USE web search first to find current best-practice TikTok content strategies and real verified techniques for this niche. Do NOT invent statistics. Return ONLY valid JSON no markdown:
-{"hook":"Single punchy opening max 20 words","body":["Real technique: explanation","Real technique: explanation","Real technique: explanation","Real technique: explanation","Real technique: explanation"],"cta":"Compelling call to action","metrics":{"retentionScore":87,"hookStrength":"HIGH","readTime":"55s","viralProbability":"79%"}}
-Tone: ${STATE.currentTone}. Each body point starts with a real technique name then colon.`;
+  const sys=`You are ViralFlow's AI scriptwriter. USE web search first to find current best-practice TikTok content strategies. You MUST respond with ONLY a valid JSON object. Start with { end with }. No text outside JSON. No apostrophes in string values.
+{"hook":"Single punchy opening max 20 words no apostrophes","body":["Technique name: explanation no apostrophes","Technique name: explanation","Technique name: explanation","Technique name: explanation","Technique name: explanation"],"cta":"Compelling call to action no apostrophes","metrics":{"retentionScore":87,"hookStrength":"HIGH","readTime":"55s","viralProbability":"79%"}}
+Tone: ${STATE.currentTone}. Each body point starts with a real technique name then colon. Do NOT invent statistics.`;
   const usr=`Search for current TikTok content strategies for this niche then write a script: ${nc}. Tone: ${STATE.currentTone}`;
   try{
     document.getElementById('script-output').style.display='flex';
