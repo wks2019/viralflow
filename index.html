@@ -1266,14 +1266,20 @@ function confirmKey(){
   const input=document.getElementById('key-input');
   const errEl=document.getElementById('key-error');
   const key=input.value.trim();
-  if(!key.startsWith('sk-ant-')){
-    errEl.textContent='Key must start with sk-ant- — check and try again.';
+  if(!key || key.length < 20){
+    errEl.textContent='Key looks too short — paste your full Anthropic API key.';
+    errEl.style.display='block';
+    input.style.borderColor='var(--pink)';
+    return;
+  }
+  if(!key.startsWith('sk-')){
+    errEl.textContent='Key should start with sk- — check you copied the full key.';
     errEl.style.display='block';
     input.style.borderColor='var(--pink)';
     return;
   }
   STATE.apiKey=key;
-  localStorage.setItem('vf_api_key',key);
+  try{localStorage.setItem('vf_api_key',key)}catch(e){}
   document.getElementById('key-modal').style.display='none';
   document.getElementById('key-status-btn').style.display='flex';
   showToast('✓ API key connected');
@@ -1334,7 +1340,7 @@ refreshScriptContext();
 (function(){
   try{
     const saved=localStorage.getItem('vf_api_key');
-    if(saved&&saved.startsWith('sk-ant-')){
+    if(saved&&saved.startsWith('sk-')&&saved.length>20){
       STATE.apiKey=saved;
       document.getElementById('key-modal').style.display='none';
       document.getElementById('key-status-btn').style.display='flex';
