@@ -1229,8 +1229,18 @@ async function runHookVariation(){
   const usr=`Write ONE alternative TikTok hook for niche: "${STATE.currentNiche}". Tone: ${STATE.currentTone}. Make it surprising and different.`;
   try{
     const{text:full}=await streamClaude(sys,usr,()=>{});
-    try{const data=safeParseJSON(full);const hook=data.hook||'';hookEl.innerHTML='';let hi=0;const int=setInterval(()=>{if(hi>=hook.length){clearInterval(int);STATE.isStreaming=false;return}hookEl.textContent=hook.substring(0,hi+1);hi++},18)}
-    catch(e){hookEl.textContent=STATE.generatedScript?.hook||'—';STATE.isStreaming=false}
+    const data=safeParseJSON(full);
+    const hook=data.hook||'';
+    hookEl.innerHTML='';
+    let hi=0;
+    const int=setInterval(()=>{
+      if(hi>=hook.length){clearInterval(int);STATE.isStreaming=false;return}
+      hookEl.textContent=hook.substring(0,hi+1);hi++;
+    },18);
+  }catch(e){
+    hookEl.textContent=STATE.generatedScript?.hook||'—';
+    STATE.isStreaming=false;
+  }
 }
 
 function copyScript(){
