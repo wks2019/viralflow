@@ -1032,8 +1032,7 @@ Make everything specific to the niche. Each video a distinct angle. Faceless con
   try{
     const{text:full}=await streamClaude(sys,usr,()=>{});
     clearInterval(lInt);
-    const jm=full.match(/\{[\s\S]*\}/);if(!jm)throw new Error('Invalid format');
-    const data=JSON.parse(jm[0]);STATE.postingPlan=data;
+    const data=safeParseJSON(full);STATE.postingPlan=data;
     renderPostingPlan(data);
     hideLoader('plan-loader');
     document.getElementById('plan-output').style.display='flex';
@@ -1130,8 +1129,7 @@ Base everything on real current web data.`;
     document.getElementById('niche-results').style.display='flex';
     document.getElementById('niche-narrative').innerHTML='<span class="stream-cursor"></span>';
     const{text:full,sources}=await streamClaude(sys,usr,(c,f,sig)=>{if(sig==='searching'){const el=document.getElementById('niche-loader-text');if(el)el.textContent='Searching the web...'}},true);
-    const jm=full.match(/\{[\s\S]*\}/);if(!jm)throw new Error('Invalid response format');
-    const data=JSON.parse(jm[0]);STATE.nicheAnalysis=data;
+    const data=safeParseJSON(full);STATE.nicheAnalysis=data;
     renderNicheResults(niche,data,sources);
     clearInterval(pInt);hideLoader('niche-loader');STATE.isStreaming=false;document.getElementById('analyze-btn').disabled=false;
   }catch(err){
@@ -1202,8 +1200,7 @@ Tone: ${STATE.currentTone}. Each body point starts with a real technique name th
     document.getElementById('body-text').innerHTML='<span class="stream-cursor"></span>';
     document.getElementById('cta-text').innerHTML='<span class="stream-cursor"></span>';
     const{text:full,sources}=await streamClaude(sys,usr,(c,f,sig)=>{if(sig==='searching'){const el=document.getElementById('script-loader-text');if(el)el.textContent='Searching for techniques...'}},true);
-    const jm=full.match(/\{[\s\S]*\}/);if(!jm)throw new Error('Invalid script format');
-    const data=JSON.parse(jm[0]);STATE.generatedScript=data;
+    const data=safeParseJSON(full);STATE.generatedScript=data;
     renderScript(data);
     renderSources('script-sources','script-sources-list',sources);
     const hs=(data.hook||'').replace(/["']/g,'').substring(0,30).toUpperCase();
@@ -1232,10 +1229,8 @@ async function runHookVariation(){
   const usr=`Write ONE alternative TikTok hook for niche: "${STATE.currentNiche}". Tone: ${STATE.currentTone}. Make it surprising and different.`;
   try{
     const{text:full}=await streamClaude(sys,usr,()=>{});
-    const m=full.match(/\{[\s\S]*\}/);
-    if(m){const hook=JSON.parse(m[0]).hook||'';hookEl.innerHTML='';let hi=0;const int=setInterval(()=>{if(hi>=hook.length){clearInterval(int);STATE.isStreaming=false;return}hookEl.textContent=hook.substring(0,hi+1);hi++},18)}
-    else STATE.isStreaming=false;
-  }catch(e){hookEl.textContent=STATE.generatedScript?.hook||'—';STATE.isStreaming=false}
+    try{const data=safeParseJSON(full);const hook=data.hook||'';hookEl.innerHTML='';let hi=0;const int=setInterval(()=>{if(hi>=hook.length){clearInterval(int);STATE.isStreaming=false;return}hookEl.textContent=hook.substring(0,hi+1);hi++},18)}
+    catch(e){hookEl.textContent=STATE.generatedScript?.hook||'—';STATE.isStreaming=false}
 }
 
 function copyScript(){
@@ -1258,8 +1253,7 @@ Mix 4-5 broad and 3-4 niche hashtags.`;
   const usr=`Generate TikTok hashtags for niche: "${STATE.currentNiche||'general content'}". Tone: ${STATE.currentTone}. ${ss}`;
   try{
     const{text:full}=await streamClaude(sys,usr,()=>{});
-    const m=full.match(/\{[\s\S]*\}/);if(!m)throw new Error('Invalid format');
-    const data=JSON.parse(m[0]);
+    const data=safeParseJSON(full);
     wrap.innerHTML='';wrap.style.opacity='1';
     (data.hashtags||[]).forEach((tag,i)=>setTimeout(()=>{const s=document.createElement('span');s.className='chip chip-appear '+(i%2===0?'chip-pink':'chip-blue');s.textContent=tag;wrap.appendChild(s)},i*100));
     if(data.caption&&cb&&ce){setTimeout(()=>{cb.style.display='block';ce.innerHTML='';let ci=0;const cap=data.caption;const int=setInterval(()=>{if(ci>=cap.length){clearInterval(int);return}ce.textContent=cap.substring(0,ci+1);ci++},20)},(data.hashtags||[]).length*100+100)}
@@ -1304,7 +1298,26 @@ function toggleKeyVisibility(){
     icon.innerHTML='<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 100 6 3 3 0 000-6z"/>';
   }
 }
-function requireKey(){
+function safeParseJSON(text) {
+  // Extract JSON block
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('No JSON found in response');
+  let raw = match[0];
+  // Fix common issues: smart quotes, unescaped special chars
+  raw = raw
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\r\n/g, ' ')
+    .replace(/\n/g, ' ')
+    .replace(/\t/g, ' ');
+  try {
+    return JSON.parse(raw);
+  } catch(e) {
+    // Try to salvage by removing trailing commas
+    raw = raw.replace(/,\s*([}\]])/g, '$1');
+    return JSON.parse(raw);
+  }
+}
   if(!STATE.apiKey){document.getElementById('key-modal').style.display='flex';return false}
   return true;
 }
