@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Luxury SOP Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+/* ── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --gold:        #C9A84C;
+  --gold-lt:     #E8D399;
+  --gold-dk:     #9A7A2E;
+  --gold-bg:     #F8F4EB;
+  --navy:        #0D1B2A;
+  --navy-lt:     #1E3248;
+  --cream:       #FDFAF4;
+  --cream-dk:    #F2EDE0;
+  --ink:         #2C2C2C;
+  --muted:       #7A7065;
+  --border:      rgba(201,168,76,0.28);
+  --border-md:   rgba(201,168,76,0.45);
+  --radius:      10px;
+  --shadow:      0 4px 32px rgba(13,27,42,0.10);
+  --shadow-lg:   0 8px 56px rgba(13,27,42,0.16);
+  --serif:       'Playfair Display', Georgia, serif;
+  --serif2:      'Cormorant Garamond', Georgia, serif;
+  --sans:        'DM Sans', system-ui, sans-serif;
+  --transition:  0.18s ease;
+}
+
+/* ── RESET ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── BACKGROUND TEXTURE ──────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 15% 10%, rgba(201,168,76,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 90%, rgba(13,27,42,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+main {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 60px 24px 80px;
+  flex: 1;
+}
+
+/* ── HEADER ──────────────────────────────────────────────── */
+header {
+  text-align: center;
+  margin-bottom: 52px;
+}
+
+.header-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold-dk);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.header-eyebrow::before,
+.header-eyebrow::after {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-bottom: 14px;
+}
+
+.header-sub {
+  font-family: var(--serif2);
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.header-rule {
+  width: 64px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 22px auto 0;
+}
+
+/* ── QUICK STARTS ───────────────────────────────────────── */
+.presets-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.presets-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.preset-chip {
+  background: transparent;
+  border: 1px solid var(--border-md);
+  color: var(--gold-dk);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.preset-chip:hover {
+  background: var(--gold-bg);
+  border-color: var(--gold);
+  color: var(--navy);
+}
+
+/* ── FORM CARD ───────────────────────────────────────────── */
+.form-card {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 40px;
+  box-shadow: var(--shadow);
+}
+@media (max-width: 600px) { .form-card { padding: 24px 18px; } }
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ── FIELD ───────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 7px; }
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy);
+  opacity: 0.75;
+}
+
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  background: rgba(248,244,235,0.55);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  padding: 11px 15px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  -webkit-appearance: none;
+}
+input[type="text"]::placeholder,
+textarea::placeholder { color: var(--muted); opacity: 0.7; }
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.14);
+}
+select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239A7A2E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  padding-right: 36px;
+}
+textarea { resize: vertical; min-height: 80px; }
+
+/* ── SEGMENTED ───────────────────────────────────────────── */
+.seg-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: rgba(248,244,235,0.7);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  padding: 4px;
+}
+
+.seg-btn {
+  flex: 1;
+  min-width: 80px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.seg-btn:hover:not(.active) { background: rgba(201,168,76,0.1); color: var(--navy); }
+.seg-btn.active {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(13,27,42,0.18);
+}
+
+/* ── ADVANCED TOGGLE ─────────────────────────────────────── */
+.advanced-toggle {
+  background: none;
+  border: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gold-dk);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(154,122,46,0.4);
+  transition: color var(--transition);
+}
+.advanced-toggle:hover { color: var(--navy); }
+
+.advanced-panel {
+  display: none;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 18px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.advanced-panel.open { display: flex; }
+
+/* ── PASTE SOP BOX ───────────────────────────────────────── */
+.paste-box {
+  position: relative;
+}
+.paste-box textarea {
+  min-height: 100px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  color: var(--ink);
+}
+.paste-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+/* ── DIVIDER ─────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-md), transparent);
+  margin: 4px 0;
+}
+
+/* ── SUBMIT BUTTON ───────────────────────────────────────── */
+.btn-generate {
+  width: 100%;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-lt) 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 16px 32px;
+  cursor: pointer;
+  transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+  box-shadow: 0 4px 20px rgba(13,27,42,0.22);
+  position: relative;
+  overflow: hidden;
+}
+.btn-generate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.12) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+.btn-generate:hover::after { transform: translateX(100%); }
+.btn-generate:hover { opacity: 0.92; box-shadow: 0 6px 28px rgba(13,27,42,0.3); }
+.btn-generate:active { transform: translateY(1px); }
+.btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-generate:disabled::after { display: none; }
+
+/* ── ERROR ───────────────────────────────────────────────── */
+.error-box {
+  background: rgba(200,50,50,0.07);
+  border: 1px solid rgba(200,50,50,0.3);
+  border-radius: var(--radius);
+  color: #b91c1c;
+  font-size: 13.5px;
+  padding: 12px 16px;
+  text-align: center;
+  display: none;
+}
+.error-box.visible { display: block; }
+
+/* ── SPINNER ─────────────────────────────────────────────── */
+.spinner-wrap {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: 48px 0;
+  color: var(--muted);
+}
+.spinner-wrap.visible { display: flex; }
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(201,168,76,0.25);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-label {
+  font-family: var(--serif2);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+/* ── OUTPUT SECTION ──────────────────────────────────────── */
+.output-section {
+  display: none;
+  margin-top: 40px;
+}
+.output-section.visible { display: block; }
+
+.output-card {
+  background: #fff;
+  border: 1px solid var(--border-md);
+  border-radius: 16px;
+  padding: 48px 52px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+@media (max-width: 600px) { .output-card { padding: 24px 18px; } }
+
+.output-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-dk), var(--gold), var(--gold-lt), var(--gold));
+  border-radius: 16px 16px 0 0;
+}
+
+/* ── ACTION BUTTONS ──────────────────────────────────────── */
+.output-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.btn-action {
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-md);
+  color: var(--gold-dk);
+}
+.btn-outline:hover { background: var(--gold-bg); border-color: var(--gold); color: var(--navy); }
+
+.btn-solid {
+  background: linear-gradient(135deg, var(--gold-dk), var(--gold));
+  border: none;
+  color: var(--navy);
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(201,168,76,0.3);
+}
+.btn-solid:hover { opacity: 0.9; box-shadow: 0 4px 18px rgba(201,168,76,0.4); }
+
+/* ── SOP CONTENT (rendered markdown) ────────────────────── */
+.sop-content h1 {
+  font-family: var(--serif);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.sop-content h2 {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border-md);
+}
+.sop-content h3 {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--navy-lt);
+  margin-top: 1.4rem;
+  margin-bottom: 0.4rem;
+}
+.sop-content p { margin-bottom: 0.7rem; line-height: 1.7; }
+.sop-content ul, .sop-content ol { margin: 0.4rem 0 1rem 1.5rem; line-height: 1.75; }
+.sop-content ul { list-style: disc; }
+.sop-content ol { list-style: decimal; }
+.sop-content li { margin-bottom: 0.3rem; }
+.sop-content strong { font-weight: 600; color: var(--navy); }
+.sop-content blockquote {
+  border-left: 3px solid var(--gold);
+  margin: 1rem 0;
+  padding: 6px 16px;
+  color: var(--muted);
+  font-style: italic;
+}
+.sop-content hr { border: none; border-top: 1px solid var(--border-md); margin: 1.5rem 0; }
+.sop-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.6rem 0 1.4rem;
+  font-size: 13.5px;
+  background: #fff;
+  display: block;
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(13,27,42,0.07);
+}
+.sop-content th, .sop-content td {
+  border: 1px solid var(--border-md);
+  padding: 9px 13px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.sop-content thead th {
+  background: rgba(201,168,76,0.15);
+  color: var(--navy);
+  font-weight: 600;
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.sop-content tbody tr:nth-child(even) td { background: var(--gold-bg); }
+.sop-content tbody tr:hover td { background: rgba(201,168,76,0.08); }
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+footer a { color: var(--gold-dk); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .seg-btn { min-width: 60px; font-size: 12px; padding: 7px 8px; }
+  .output-actions { justify-content: stretch; }
+  .btn-action { flex: 1; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<main>
+  <!-- HEADER -->
+  <header>
+    <div class="header-eyebrow">The Luxury Service Masterclass</div>
+    <h1>Luxury SOP Builder</h1>
+    <p class="header-sub">SOPs, checklists, training plans &amp; more — built for five-star hospitality.</p>
+    <div class="header-rule"></div>
+  </header>
+
+  <!-- QUICK STARTS -->
+  <p class="presets-label">Quick Start</p>
+  <div class="presets-wrap" id="presets"></div>
+
+  <!-- FORM -->
+  <div class="form-card">
+    <div class="form-section">
+
+      <!-- Output Type -->
+      <div class="field">
+        <label class="field-label">Output Type</label>
+        <div class="seg-wrap" id="seg-output"></div>
+      </div>
+
+      <!-- Training Level -->
+      <div class="field">
+        <label class="field-label">Training Level</label>
+        <div class="seg-wrap" id="seg-level"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Hotel Name -->
+      <div class="field">
+        <label class="field-label" for="hotel">Hotel / Property Name</label>
+        <input type="text" id="hotel" placeholder="The Grand Mayfair" required />
+      </div>
+
+      <!-- Department -->
+      <div class="field">
+        <label class="field-label" for="department">Department</label>
+        <select id="department">
+          <option>Room Service</option>
+          <option>Housekeeping</option>
+          <option>Front Desk</option>
+          <option>F&amp;B</option>
+          <option>Concierge</option>
+          <option>Spa</option>
+          <option>Events</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <!-- Title -->
+      <div class="field">
+        <label class="field-label" for="title">Role or Procedure Title</label>
+        <input type="text" id="title" placeholder='e.g. "Room Service Supervisor" or "Wine Service at Table"' required />
+      </div>
+
+      <!-- Notes -->
+      <div class="field">
+        <label class="field-label" for="notes">Additional Notes <span style="font-weight:400;opacity:0.6">(optional)</span></label>
+        <textarea id="notes" rows="3" placeholder="Any specific standards, brand guidelines, or details to include"></textarea>
+      </div>
+
+      <!-- Advanced Toggle -->
+      <div>
+        <button type="button" class="advanced-toggle" id="advanced-toggle">+ Add advanced details (role, audience, risks)</button>
+        <div class="advanced-panel" id="advanced-panel">
+
+          <div class="field">
+            <label class="field-label" for="role">Staff Role <span style="font-weight:400;opacity:0.6">(optional)</span></label>
+            <input type="text" id="role" placeholder='e.g. "Room Service Waiter", "Night Manager"' />
+          </div>
+
+          <div class="field">
+            <label class="field-label">Audience</label>
+            <div class="seg-wrap" id="seg-audience"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="risks">Risk &amp; Safety Points <span style="font-weight:400;opacity:0.6">(optional)</span></label>
+            <textarea id="risks" rows="2" placeholder="Allergens, hot equipment, chemical handling, guest privacy..."></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Paste existing SOP -->
+      <div class="field">
+        <label class="field-label">Improve an Existing SOP <span style="font-weight:400;opacity:0.6">(optional)</span></label>
+        <div class="paste-box">
+          <textarea id="existing-sop" rows="4" placeholder="Paste your existing SOP text here to improve and restructure it..."></textarea>
+        </div>
+        <p class="paste-hint">Paste the text of any existing procedure to have it elevated to five-star standards.</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Generate Button -->
+      <button class="btn-generate" id="btn-generate">Generate SOP</button>
+
+      <!-- Error -->
+      <div class="error-box" id="error-box"></div>
+
+    </div>
+  </div>
+
+  <!-- SPINNER -->
+  <div class="spinner-wrap" id="spinner">
+    <div class="spinner"></div>
+    <p class="spinner-label" id="spinner-label">Generating your SOP...</p>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output-section" id="output-section">
+    <div class="output-card">
+      <div class="sop-content" id="sop-content"></div>
+    </div>
+    <div class="output-actions">
+      <button class="btn-action btn-outline" id="btn-copy">Copy to Clipboard</button>
+      <button class="btn-action btn-outline" id="btn-word">Download as Word</button>
+      <button class="btn-action btn-solid" id="btn-pdf">Download as PDF</button>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>Luxury SOP Builder by <a href="https://thelsm.co.uk" target="_blank" rel="noreferrer">The Luxury Service Masterclass</a></p>
+</footer>
+
+<script>
+/* ── DATA ─────────────────────────────────────────────────── */
+const OUTPUT_TYPES = [
+  { id: 'sop',      label: 'SOP' },
+  { id: 'checklist',label: 'Checklist' },
+  { id: 'training', label: 'Training Plan' },
+  { id: 'quiz',     label: 'Staff Quiz' },
+  { id: 'signoff',  label: 'Sign-off Sheet' },
+  { id: 'poster',   label: 'Poster Text' },
+];
+
+const TRAINING_LEVELS = [
+  { id: 'basic',    label: 'Basic' },
+  { id: 'detailed', label: 'Detailed' },
+  { id: 'luxury',   label: 'Luxury Standard' },
+];
+
+const AUDIENCES = [
+  { id: 'guest', label: 'Guest-facing' },
+  { id: 'boh',   label: 'Back-of-house' },
+  { id: 'both',  label: 'Both' },
+];
+
+const PRESETS = [
+  { label: 'IRD — Order Taking',   department: 'Room Service', title: 'In-Room Dining Order Taking',          audience: 'guest' },
+  { label: 'IRD — Tray Delivery',  department: 'Room Service', title: 'In-Room Dining Tray Delivery',         audience: 'guest' },
+  { label: 'Coffee & Espresso',    department: 'F&B',          title: 'Coffee & Espresso Service',            audience: 'guest' },
+  { label: 'Amenity Delivery',     department: 'Housekeeping', title: 'VIP Amenity & Turndown Delivery',      audience: 'guest' },
+  { label: 'Mini-Bar Restock',     department: 'Housekeeping', title: 'Mini-Bar Restocking & Billing',        audience: 'boh'   },
+  { label: 'Turndown Service',     department: 'Housekeeping', title: 'Evening Turndown Service',             audience: 'guest' },
+  { label: 'VIP Arrival',          department: 'Front Desk',   title: 'VIP Arrival & Check-in',              audience: 'guest' },
+  { label: 'Shift Handover',       department: 'Other',        title: 'BOH Shift Handover',                  audience: 'boh'   },
+  { label: 'Wine Service',         department: 'F&B',          title: 'Wine Service at Table',                audience: 'guest' },
+  { label: 'Forbes / LQA',         department: 'F&B',          title: 'Forbes / LQA-Style Service Observation', audience: 'guest', notes: 'Focus on observable five-star service touchpoints.' },
+];
+
+const TRAINING_GUIDE = {
+  basic:    'Keep it concise and task-focused. Short cells, no rationale. Suitable for quick reference by junior staff.',
+  detailed: 'Provide full detail. Include rationale, brand standards, and timing. Suitable as a complete training document.',
+  luxury:   'Use a refined five-star tone. Emphasise anticipation, guest scripting, sensory cues, and brand-voice phrasing worthy of Forbes / LQA five-star standards.',
+};
+
+const AUDIENCE_GUIDE = {
+  guest: 'Emphasise guest interaction, scripting, eye contact, body language, and verbal cues.',
+  boh:   'Emphasise back-of-house coordination, handovers, equipment handling, and team communication.',
+  both:  'Cover both guest-facing interaction and BOH coordination.',
+};
+
+/* ── STATE ───────────────────────────────────────────────── */
+let outputType    = 'sop';
+let trainingLevel = 'detailed';
+let audience      = 'both';
+let generatedMd   = '';
+
+/* ── SEGMENTED CONTROL FACTORY ───────────────────────────── */
+function buildSeg(containerId, items, initial, onSelect) {
+  const wrap = document.getElementById(containerId);
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'seg-btn' + (item.id === initial ? ' active' : '');
+    btn.textContent = item.label;
+    btn.dataset.id = item.id;
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      onSelect(item.id);
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+/* ── PRESETS ─────────────────────────────────────────────── */
+const presetsWrap = document.getElementById('presets');
+PRESETS.forEach(p => {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'preset-chip';
+  chip.textContent = p.label;
+  chip.addEventListener('click', () => {
+    document.getElementById('department').value = p.department;
+    document.getElementById('title').value       = p.title;
+    if (p.notes) document.getElementById('notes').value = p.notes;
+    // set audience segment
+    audience = p.audience;
+    document.querySelectorAll('#seg-audience .seg-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.id === audience);
+    });
+  });
+  presetsWrap.appendChild(chip);
+});
+
+/* ── BUILD UI ────────────────────────────────────────────── */
+buildSeg('seg-output',   OUTPUT_TYPES,    outputType,    v => { outputType = v; updateBtnLabel(); });
+buildSeg('seg-level',    TRAINING_LEVELS, trainingLevel, v => { trainingLevel = v; });
+buildSeg('seg-audience', AUDIENCES,       audience,      v => { audience = v; });
+
+function updateBtnLabel() {
+  const label = OUTPUT_TYPES.find(o => o.id === outputType)?.label ?? 'SOP';
+  const existingText = document.getElementById('existing-sop').value.trim();
+  document.getElementById('btn-generate').textContent =
+    existingText ? `Improve ${label}` : `Generate ${label}`;
+}
+
+document.getElementById('existing-sop').addEventListener('input', updateBtnLabel);
+
+/* ── ADVANCED TOGGLE ─────────────────────────────────────── */
+const advBtn   = document.getElementById('advanced-toggle');
+const advPanel = document.getElementById('advanced-panel');
+let advOpen = false;
+advBtn.addEventListener('click', () => {
+  advOpen = !advOpen;
+  advPanel.classList.toggle('open', advOpen);
+  advBtn.textContent = advOpen ? '− Hide advanced details' : '+ Add advanced details (role, audience, risks)';
+});
+
+/* ── PROMPT BUILDER ──────────────────────────────────────── */
+function buildOutputInstruction(type) {
+  switch (type) {
+    case 'checklist': return `Produce a single GitHub-Flavored Markdown CHECKLIST.
+Start with "# {Title} — Checklist".
+Then a single markdown table with columns: | # | Check | Standard | ✓ |
+Leave the ✓ column empty (a single space) so it can be ticked when printed.
+Cover every critical step from prep through close-out. 10–20 rows.
+No prose outside the heading and table.`;
+
+    case 'training': return `Produce a TRAINING SESSION PLAN as markdown with these sections, in order:
+
+## Learning Objectives
+A markdown table | # | Objective | Outcome |
+
+## Duration & Materials
+A markdown table | Item | Detail |
+
+## Session Flow
+A markdown table | Time | Activity | Trainer Notes |
+
+## Role-Play Scripts
+A markdown table | Scenario | Guest Line | Staff Response | Coaching Note |
+
+## Debrief & Assessment
+A markdown table | Question | Looking-For Answer |
+
+Every table MUST include the header row and the | --- | separator. No prose outside section headings and tables.`;
+
+    case 'quiz': return `Produce a STAFF QUIZ as markdown.
+Start with "# {Title} — Staff Quiz".
+Then a single markdown table with columns: | # | Question | Correct Answer | Why it matters |
+Produce 10–15 questions covering knowledge, judgement, and standards.
+Then a "## Answer Key Summary" section with a brief table | # | Key Point |.
+No prose outside headings and tables.`;
+
+    case 'signoff': return `Produce a MANAGER SIGN-OFF SHEET as markdown.
+Start with "# {Title} — Competency Sign-off".
+Then a markdown table: | Competency | Observed Standard | Pass / Fail | Date | Manager Initials |
+Leave the last three columns blank (single space).
+Cover 10–18 distinct competencies, sequenced as they would be observed in real shift flow.
+Finish with a short "## Sign-off" section containing a small table | Field | Value | with rows: Staff Member Name, Department, Manager Name, Overall Result, Date — all values blank.
+No prose outside that.`;
+
+    case 'poster': return `Produce ONE-PAGE POSTER TEXT, ready to paste into Canva.
+Format:
+# {Punchy Headline — max 6 words}
+> {One-line tagline capturing the service promise}
+
+## The {N} Moments of {Service}
+A markdown table | # | Moment | Guest-facing phrase | Why it matters |
+5 to 7 rows. Each "Guest-facing phrase" must be a short quote staff could actually say.
+
+## Remember
+A short bullet list (3–5 items) of the non-negotiables.
+
+No long paragraphs. Cinematic, brand-led, energising language.`;
+
+    case 'sop':
+    default: return `Structure the SOP as GitHub-Flavored Markdown tables. Each section below must be its own "## Section Title" heading immediately followed by a markdown table:
+
+1. Purpose — | Objective | Description |
+2. Scope and Responsibilities — | Role | Responsibility |
+3. Equipment and Materials Required — | Item | Purpose / Specification |
+4. Step-by-Step Procedure — | Step | Action | Standard / Detail | Time |
+5. Communication Standards — | Situation | Script / Phrasing | Tone |
+6. Quality Checklist — | # | Checkpoint | Pass Criteria |
+7. Common Issues and Solutions — | Issue | Root Cause | Resolution |
+
+Every table MUST include the header row and the | --- | separator. Keep cells concise. No prose outside section headings and tables.`;
+  }
+}
+
+function buildPrompt() {
+  const hotel      = document.getElementById('hotel').value.trim();
+  const department = document.getElementById('department').value;
+  const title      = document.getElementById('title').value.trim();
+  const notes      = document.getElementById('notes').value.trim();
+  const role       = document.getElementById('role').value.trim();
+  const risks      = document.getElementById('risks').value.trim();
+  const existing   = document.getElementById('existing-sop').value.trim();
+
+  const systemPrompt = `You are a luxury hospitality operations expert with 20 years of five-star hotel experience. You create detailed, professional operational documents — SOPs, checklists, training plans, quizzes, sign-off sheets, and posters — for hotel teams. Your output is clear, structured, and immediately usable by hotel staff.`;
+
+  const userPrompt = `Create the following operational document for a luxury five-star property.
+
+Property: ${hotel}
+Department: ${department}
+Role / Procedure Title: ${title}
+${role ? `Staff Role: ${role}\n` : ''}Audience focus: ${AUDIENCE_GUIDE[audience]}
+Training level: ${TRAINING_GUIDE[trainingLevel]}
+${risks ? `Risk & safety points to cover: ${risks}\n` : ''}${notes ? `Additional notes: ${notes}\n` : ''}${existing ? `\nThe user has uploaded an EXISTING document. IMPROVE, RESTRUCTURE AND ENHANCE it — preserve specific procedures, brand standards, names and timings, while elevating language and structure to five-star standards. Fill obvious gaps. Source:\n"""\n${existing.slice(0, 12000)}\n"""\n` : ''}
+OUTPUT FORMAT — follow these rules strictly:
+${buildOutputInstruction(outputType)}
+
+Use formal, clear language suitable for staff training at a luxury five-star hotel.`;
+
+  return { systemPrompt, userPrompt };
+}
+
+/* ── GENERATE ────────────────────────────────────────────── */
+document.getElementById('btn-generate').addEventListener('click', async () => {
+  const hotel = document.getElementById('hotel').value.trim();
+  const title = document.getElementById('title').value.trim();
+  if (!hotel || !title) {
+    showError('Please fill in the Hotel Name and Procedure Title.');
+    return;
+  }
+
+  hideError();
+  showSpinner(true);
+  showOutput(false);
+
+  const { systemPrompt, userPrompt } = buildPrompt();
+  const outputLabel = OUTPUT_TYPES.find(o => o.id === outputType)?.label ?? 'SOP';
+  document.getElementById('spinner-label').textContent = `Generating your ${outputLabel.toLowerCase()}...`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 3000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    if (!response.ok) throw new Error('Generation failed. Please try again.');
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text ?? '';
+    if (!text) throw new Error('Empty response. Please try again.');
+
+    generatedMd = text;
+    document.getElementById('sop-content').innerHTML = marked.parse(text);
+    showOutput(true);
+  } catch (err) {
+    showError(err.message || 'Something went wrong. Please try again.');
+  } finally {
+    showSpinner(false);
+    if (generatedMd) {
+      setTimeout(() => {
+        document.getElementById('output-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }
+});
+
+/* ── COPY ────────────────────────────────────────────────── */
+document.getElementById('btn-copy').addEventListener('click', async () => {
+  if (!generatedMd) return;
+  try {
+    const html  = marked.parse(generatedMd);
+    const plain = generatedMd
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\|/g, '\t')
+      .replace(/^\s*[-*]\s+/gm, '• ')
+      .replace(/^\s*:?-{2,}.*$/gm, '');
+
+    if (typeof ClipboardItem !== 'undefined' && navigator.clipboard.write) {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html':  new Blob([html],  { type: 'text/html' }),
+          'text/plain': new Blob([plain], { type: 'text/plain' }),
+        }),
+      ]);
+    } else {
+      await navigator.clipboard.writeText(plain);
+    }
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
+  } catch {
+    await navigator.clipboard.writeText(generatedMd);
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
+  }
+});
+
+/* ── PDF DOWNLOAD ────────────────────────────────────────── */
+document.getElementById('btn-pdf').addEventListener('click', () => {
+  if (!generatedMd) return;
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf       = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageW     = pdf.internal.pageSize.getWidth();
+    const pageH     = pdf.internal.pageSize.getHeight();
+    const margin    = 50;
+    const maxW      = pageW - margin * 2;
+    const gold      = [201, 168, 76];
+    const navy      = [13,  27,  42];
+    const gray      = [120, 120, 120];
+    let y           = margin;
+
+    const ensureSpace = h => {
+      if (y + h > pageH - margin) { pdf.addPage(); y = margin; }
+    };
+
+    const writeText = (text, { size = 11, bold = false, italic = false, color = navy, gap = 6, underline = false } = {}) => {
+      const style = bold ? (italic ? 'bolditalic' : 'bold') : italic ? 'italic' : 'normal';
+      pdf.setFont('times', style);
+      pdf.setFontSize(size);
+      pdf.setTextColor(...color);
+      const lines = pdf.splitTextToSize(text, maxW);
+      const lh    = size * 1.35;
+      for (const ln of lines) {
+        ensureSpace(lh);
+        pdf.text(ln, margin, y);
+        if (underline) {
+          pdf.setDrawColor(...gold);
+          pdf.setLineWidth(0.7);
+          pdf.line(margin, y + 3, margin + maxW, y + 3);
+        }
+        y += lh;
+      }
+      y += gap;
+    };
+
+    // Title block
+    const title = document.getElementById('title').value.trim() || 'Standard Operating Procedure';
+    const hotel = document.getElementById('hotel').value.trim();
+    const dept  = document.getElementById('department').value;
+    const outLabel = OUTPUT_TYPES.find(o => o.id === outputType)?.label ?? 'SOP';
+
+    writeText(`${title} — ${outLabel}`, { size: 20, bold: true, underline: true, gap: 4 });
+    writeText(`${hotel} — ${dept}`, { size: 11, color: gray, gap: 18 });
+
+    // Parse blocks
+    const lines = generatedMd.split(/\r?\n/);
+    const stripInline = s => s.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/<br\s*\/?>/gi, '\n');
+    const parseRow    = ln => ln.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => stripInline(c.trim()));
+    const isSep       = ln => /^\s*\|?\s*:?-{2,}/.test(ln) && ln.includes('|');
+
+    let i = 0;
+    while (i < lines.length) {
+      const ln = lines[i].trimEnd();
+
+      if (ln.trim().startsWith('|') && i + 1 < lines.length && isSep(lines[i + 1])) {
+        // TABLE
+        const head = parseRow(ln);
+        i += 2;
+        const body = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          body.push(parseRow(lines[i]));
+          i++;
+        }
+        ensureSpace(40);
+        pdf.autoTable({
+          startY: y,
+          head:   [head],
+          body:   body,
+          margin: { left: margin, right: margin },
+          styles: { font: 'times', fontSize: 10, cellPadding: 5, valign: 'top', textColor: navy },
+          headStyles: { fillColor: gold, textColor: [255, 255, 255], fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [248, 244, 235] },
+          theme: 'grid',
+        });
+        y = (pdf.lastAutoTable?.finalY ?? y) + 12;
+        continue;
+      }
+
+      if (!ln.trim()) { i++; continue; }
+
+      if (/^### /.test(ln))      writeText(ln.replace(/^### /, ''), { size: 13, bold: true, gap: 4 });
+      else if (/^## /.test(ln))  writeText(ln.replace(/^## /, ''),  { size: 15, bold: true, gap: 6 });
+      else if (/^# /.test(ln))   writeText(ln.replace(/^# /, ''),   { size: 18, bold: true, gap: 8 });
+      else if (/^> /.test(ln))   writeText(ln.replace(/^> /, ''),   { size: 11, italic: true, color: [90, 90, 90], gap: 6 });
+      else if (/^\s*[-*] /.test(ln)) writeText('•  ' + stripInline(ln.replace(/^\s*[-*] /, '')), { size: 11, gap: 2 });
+      else writeText(stripInline(ln).replace(/[*_]/g, ''), { size: 11, gap: 4 });
+
+      i++;
+    }
+
+    const safe = title.replace(/[^\w\-]+/g, '_');
+    pdf.save(`${safe}_${outLabel.replace(/\s+/g, '_')}.pdf`);
+  } catch (err) {
+    console.error('PDF error:', err);
+    showError('Could not generate PDF. Please try again.');
+  }
+});
+
+/* ── WORD DOWNLOAD ───────────────────────────────────────── */
+document.getElementById('btn-word').addEventListener('click', async () => {
+  if (!generatedMd) return;
+  try {
+    // Build a simple RTF-style HTML blob and trigger download as .doc
+    // (true .docx needs a bundler; this opens correctly in Word)
+    const title    = document.getElementById('title').value.trim() || 'Standard Operating Procedure';
+    const hotel    = document.getElementById('hotel').value.trim();
+    const dept     = document.getElementById('department').value;
+    const outLabel = OUTPUT_TYPES.find(o => o.id === outputType)?.label ?? 'SOP';
+    const htmlBody = marked.parse(generatedMd);
+
+    const full = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'>
+<style>
+  body { font-family: Calibri, sans-serif; font-size: 11pt; color: #0D1B2A; margin: 40pt; }
+  h1 { font-family: 'Times New Roman', serif; font-size: 22pt; font-weight: bold; color: #0D1B2A; border-bottom: 2pt solid #C9A84C; padding-bottom: 4pt; }
+  h2 { font-family: 'Times New Roman', serif; font-size: 16pt; font-weight: bold; color: #0D1B2A; margin-top: 20pt; border-bottom: 1pt solid #C9A84C; }
+  h3 { font-family: 'Times New Roman', serif; font-size: 13pt; color: #1E3248; margin-top: 14pt; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 10pt; }
+  th { background: #C9A84C; color: white; font-weight: bold; padding: 6pt 8pt; border: 1pt solid #C9A84C; text-align: left; }
+  td { padding: 5pt 8pt; border: 1pt solid #C9A84C; vertical-align: top; }
+  tr:nth-child(even) td { background: #F8F4EB; }
+  p { line-height: 1.5; margin: 4pt 0; }
+  .header-sub { color: #7A7065; font-style: italic; font-size: 10pt; margin-bottom: 16pt; }
+</style>
+</head>
+<body>
+<h1>${title} — ${outLabel}</h1>
+<p class="header-sub">${hotel} — ${dept}</p>
+${htmlBody}
+</body></html>`;
+
+    const blob = new Blob([full], { type: 'application/msword' });
+    const safe = title.replace(/[^\w\-]+/g, '_');
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${safe}_${outLabel.replace(/\s+/g, '_')}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Word error:', err);
+    showError('Could not generate Word file. Please try again.');
+  }
+});
+
+/* ── HELPERS ─────────────────────────────────────────────── */
+function showSpinner(v) {
+  document.getElementById('spinner').classList.toggle('visible', v);
+}
+function showOutput(v) {
+  document.getElementById('output-section').classList.toggle('visible', v);
+}
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = msg;
+  box.classList.add('visible');
+}
+function hideError() {
+  document.getElementById('error-box').classList.remove('visible');
+}
+</script>
+</body>
+</html>
